@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFarm Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #10b981;
+            --secondary-color: #059669;
+            --accent-color: #34d399;
+            --dark-color: #047857;
+            --light-color: #d1fae5;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #334155;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Login Page Styles */
+        .login-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            max-width: 400px;
+            margin: 80px auto;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .login-body {
+            padding: 30px;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+        }
+        
+        .btn-login {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-login:hover {
+            background-color: var(--dark-color);
+            border-color: var(--dark-color);
+            transform: translateY(-2px);
+        }
+        
+        /* Dashboard Styles */
+        .dashboard-container {
+            display: none;
+        }
+        
+        .header {
+            background-color: white;
+            padding: 15px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 20px;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        /* Enhanced Sensor Styles */
+        .sensor-item {
+            padding: 15px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .sensor-item:last-child {
+            border-bottom: none;
+        }
+        
+        .sensor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .sensor-name {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 15px;
+        }
+        
+        .sensor-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: right;
+        }
+        
+        .sensor-range {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+        
+        .sensor-progress {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .sensor-progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-good { background-color: #10b981; }
+        .progress-warning { background-color: #f59e0b; }
+        .progress-danger { background-color: #ef4444; }
+        
+        .sensor-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 5px;
+        }
+        
+        .range-min, .range-max {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .device-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .btn-device {
+            width: 60px;
+            padding: 6px 0;
+        }
+        
+        .btn-active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .chart-container {
+            height: 250px;
+            position: relative;
+        }
+        
+        .prediction-box {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .prediction-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin: 10px 0;
+        }
+        
+        .suggestion-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .suggestion-icon {
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+        
+        .zone-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .zone-item:last-child {
+            border-bottom: none;
+        }
+        
+        .zone-value {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .settings-item {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .settings-label {
+            font-weight: 600;
+            color: #475569;
+        }
+        
+        .settings-value {
+            color: #64748b;
+        }
+        
+        .live-sensor-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        /* Scrollbar styling */
+        .live-sensor-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .live-sensor-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        .live-sensor-scroll::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .main-content {
+                margin-top: 20px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+        
+        .energy-total {
+            background-color: #f0fdf4;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        .sensor-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f1f5f9;
+            border-radius: 6px;
+            color: var(--primary-color);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="loginPage">
+        <div class="login-header">
+            <h2><i class="fas fa-seedling"></i> SmartFarm Control</h2>
+            <p>Crop Prediction & Monitoring Platform</p>
+        </div>
+        <div class="login-body">
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="email" placeholder="farmer@example.com" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn btn-login">
+                    <i class="fas fa-sign-in-alt"></i> Login to Dashboard
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard-container" id="dashboardPage">
+        <div class="header">
+            <div class="d-flex align-items-center gap-4">
+                <div class="logo">SF</div>
+                <div>
+                    <h1 class="h4 mb-1">SmartFarm Control Dashboard</h1>
+                    <p class="mb-0 text-muted">Real-time crop monitoring & prediction system</p>
+                </div>
+            </div>
+            <div class="header-actions d-flex align-items-center gap-3">
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-user me-1"></i> Profile
+                </button>
+                <button class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-cog me-1"></i> Settings
+                </button>
+            </div>
+        </div>
+
+        <div class="container-fluid py-4">
+            <div class="row g-4">
+                <!-- Left Column -->
+                <div class="col-lg-4">
+                    <!-- Live Sensors -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-microchip text-primary"></i>
+                            Live Sensors
+                        </div>
+                        <div class="card-body">
+                            <div class="live-sensor-scroll">
+                                <!-- Temperature Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">Temperature</div>
+                                        <div class="sensor-value">30.3 °C</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 25°C~35°C</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-good" style="width: 65%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">25°C</span>
+                                        <span class="range-max">35°C</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Humidity Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">Humidity Sensor</div>
+                                        <div class="sensor-value">65 %</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 50%~80%</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-good" style="width: 50%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">50%</span>
+                                        <span class="range-max">80%</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Soil Moisture Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">Soil Moisture Sensor</div>
+                                        <div class="sensor-value">45 %</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 35%~55%</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-good" style="width: 50%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">35%</span>
+                                        <span class="range-max">55%</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Light Intensity Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">Light Intensity Sensor</div>
+                                        <div class="sensor-value">800 Lux</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 600Lux~1000Lux</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-good" style="width: 50%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">600Lux</span>
+                                        <span class="range-max">1000Lux</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- CO2 Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">CO2 Sensor</div>
+                                        <div class="sensor-value">800 ppm</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 400ppm~1200ppm</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-good" style="width: 50%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">400ppm</span>
+                                        <span class="range-max">1200ppm</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- pH Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">pH Sensor</div>
+                                        <div class="sensor-value">6.8</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 5.8~7</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-good" style="width: 83%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">5.8</span>
+                                        <span class="range-max">7</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Energy Meter Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">Energy Meter Sensor</div>
+                                        <div class="sensor-value">2.1 kWh</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 1kWh~2.5kWh</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-warning" style="width: 73%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">1kWh</span>
+                                        <span class="range-max">2.5kWh</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Water Flow Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">Water Flow Sensor</div>
+                                        <div class="sensor-value">1.5 L/min</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 0.1L/min~1L/min</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-danger" style="width: 155%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">0.1L/min</span>
+                                        <span class="range-max">1L/min</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Water Level Sensor -->
+                                <div class="sensor-item">
+                                    <div class="sensor-header">
+                                        <div class="sensor-name">Water Level Sensor</div>
+                                        <div class="sensor-value">75 cm (Tank)</div>
+                                    </div>
+                                    <div class="sensor-range">Range: 50cm~100cm (Tank)</div>
+                                    <div class="sensor-progress">
+                                        <div class="sensor-progress-bar progress-good" style="width: 50%"></div>
+                                    </div>
+                                    <div class="sensor-status">
+                                        <span class="range-min">50cm</span>
+                                        <span class="range-max">100cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Column -->
+                <div class="col-lg-5">
+                    <!-- Energy Usage -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="fas fa-sun text-warning me-2"></i>
+                                Energy Usage (Today)
+                                <div class="sensor-label">Hourly kWh</div>
+                            </div>
+                            <div class="energy-total">Total: 10.2 kWh</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="energyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Yield Prediction -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-chart-line text-success"></i>
+                            Yield Prediction
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <div class="sensor-label mb-2">Model Output</div>
+                                    <div class="prediction-box">
+                                        <div class="prediction-value">9.4 kg/m²</div>
+                                        <div class="text-muted">Confidence: 86%</div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="sensor-label mb-2">Optimization Result</div>
+                                        <div class="fw-bold">Predicted Yield: 9.4 kg/m²</div>
+                                        <div class="text-muted small">Energy Use: 10.2 kWh/day</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="sensor-label mb-2">Action Suggestions</div>
+                                    <div class="suggestion-item">
+                                        <div class="suggestion-icon">⤷</div>
+                                        <div>Reduce lighting by 10% during 13:00–15:00</div>
+                                    </div>
+                                    <div class="suggestion-item">
+                                        <div class="suggestion-icon">⤷</div>
+                                        <div>Shorten irrigation cycles in Zone C by 20%</div>
+                                    </div>
+                                    <div class="suggestion-item">
+                                        <div class="suggestion-icon">⤷</div>
+                                        <div>Increase CO₂ ventilation for 10 minutes after sunset</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="col-lg-3">
+                    <!-- Device Control -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-cogs text-secondary"></i>
+                            Device Control
+                        </div>
+                        <div class="card-body">
+                            <div class="device-control">
+                                <div>Pump</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary btn-device btn-active">On</button>
+                                    <button class="btn btn-sm btn-outline-primary btn-device">Off</button>
+                                </div>
+                            </div>
+                            <div class="device-control">
+                                <div>LED Light</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary btn-device btn-active">On</button>
+                                    <button class="btn btn-sm btn-outline-primary btn-device">Off</button>
+                                </div>
+                            </div>
+                            <div class="device-control">
+                                <div>Ventilation Fan</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary btn-device">On</button>
+                                    <button class="btn btn-sm btn-primary btn-device btn-active">Off</button>
+                                </div>
+                            </div>
+                            <div class="device-control">
+                                <div>Irrigation System</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-primary btn-device btn-active">On</button>
+                                    <button class="btn btn-sm btn-outline-primary btn-device">Off</button>
+                                </div>
+                            </div>
+                            <div class="device-control">
+                                <div>CO₂ Injector</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-primary btn-device">On</button>
+                                    <button class="btn btn-sm btn-primary btn-device btn-active">Off</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Optimization Panel -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="fas fa-bolt text-warning"></i>
+                            Optimization Panel
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="sensor-label mb-2">Mode</div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-primary btn-sm">Manual</button>
+                                    <button class="btn btn-outline-primary btn-sm">Auto (Energy)</button>
+                                    <button class="btn btn-outline-primary btn-sm">Auto (Yield)</button>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="sensor-label mb-2">Energy Budget (kWh/day)</div>
+                                <div class="d-flex gap-2">
+                                    <input type="number" class="form-control form-control-sm" value="12">
+                                    <button class="btn btn-primary btn-sm">Apply</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="fas fa-sliders-h text-info"></i>
+                            Settings
+                        </div>
+                        <div class="card-body">
+                            <div class="settings-item">
+                                <div class="settings-label">Crop</div>
+                                <div class="settings-value">Tomato</div>
+                            </div>
+                            <div class="settings-item">
+                                <div class="settings-label">Location</div>
+                                <div class="settings-value">Nagpur, IN</div>
+                            </div>
+                            <div class="settings-item">
+                                <div class="settings-label">Model</div>
+                                <div class="settings-value">Crop+Energy v1.0</div>
+                            </div>
+                            <div class="settings-item">
+                                <div class="settings-label">Farm Size</div>
+                                <div class="settings-value">2.5 acres</div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-cog me-1"></i> Advanced Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center py-3 text-muted small">
+            SmartFarm Control • Crop Prediction System • v1.0
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Login functionality
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Simple validation
+            if (email && password) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('dashboardPage').style.display = 'block';
+                
+                // Initialize charts after login
+                initializeCharts();
+                startSensorAnimation();
+            }
+        });
+
+        // Device control buttons
+        document.querySelectorAll('.btn-device').forEach(button => {
+            button.addEventListener('click', function() {
+                const btnGroup = this.parentElement;
+                btnGroup.querySelectorAll('.btn-device').forEach(btn => {
+                    btn.classList.remove('btn-primary', 'btn-active');
+                    btn.classList.add('btn-outline-primary');
+                });
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary', 'btn-active');
+            });
+        });
+
+        // Initialize charts
+        function initializeCharts() {
+            // Energy Usage Chart
+            const energyCtx = document.getElementById('energyChart').getContext('2d');
+            const energyChart = new Chart(energyCtx, {
+                type: 'line',
+                data: {
+                    labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'],
+                    datasets: [{
+                        label: 'Energy Usage (kWh)',
+                        data: [1.2, 1.5, 2.3, 1.9, 1.4, 1.1],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#10b981',
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' kWh';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Update data periodically to simulate live data
+            setInterval(() => {
+                const newData = energyChart.data.datasets[0].data.map(value => {
+                    // Add small random variation
+                    return Math.max(0.5, value + (Math.random() - 0.5) * 0.3);
+                });
+                
+                energyChart.data.datasets[0].data = newData;
+                energyChart.update('none');
+            }, 5000);
+        }
+
+        // Animate sensor values and progress bars
+        function startSensorAnimation() {
+            setInterval(() => {
+                // Update sensor values with small random variations
+                document.querySelectorAll('.sensor-value').forEach(element => {
+                    const currentText = element.textContent;
+                    const match = currentText.match(/([\d.]+)\s*([°%a-zA-Z]+)/);
+                    if (match) {
+                        const currentValue = parseFloat(match[1]);
+                        const unit = match[2];
+                        const variation = (Math.random() - 0.5) * 2;
+                        const newValue = Math.max(0, currentValue + variation);
+                        element.textContent = newValue.toFixed(1) + ' ' + unit;
+                        
+                        // Update progress bar based on new value
+                        const sensorItem = element.closest('.sensor-item');
+                        const progressBar = sensorItem.querySelector('.sensor-progress-bar');
+                        const rangeText = sensorItem.querySelector('.sensor-range').textContent;
+                        const rangeMatch = rangeText.match(/[\d.]+/g);
+                        
+                        if (rangeMatch && rangeMatch.length >= 2) {
+                            const min = parseFloat(rangeMatch[0]);
+                            const max = parseFloat(rangeMatch[1]);
+                            const percentage = ((newValue - min) / (max - min)) * 100;
+                            
+                            // Cap at 100% for display
+                            const displayPercentage = Math.min(100, Math.max(0, percentage));
+                            progressBar.style.width = displayPercentage + '%';
+                            
+                            // Update color based on value
+                            if (percentage < 30) {
+                                progressBar.className = 'sensor-progress-bar progress-danger';
+                            } else if (percentage < 70) {
+                                progressBar.className = 'sensor-progress-bar progress-warning';
+                            } else {
+                                progressBar.className = 'sensor-progress-bar progress-good';
+                            }
+                        }
+                    }
+                });
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
